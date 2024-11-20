@@ -5,42 +5,54 @@ import "fmt"
 type State string
 type Event string
 
+// StateActionFunc is a callback function that will be called when entering or
+// leaving a state.
 type StateActionFunc func(State, State) error
 
-type TransitionEvent struct {
+type transitionEvent struct {
 	Current State
 	Input   Event
 }
 
+// Machine is a finite-state machine.
 type Machine struct {
-	transitions map[TransitionEvent]State
+	transitions map[transitionEvent]State
 	current     State
 
 	enterAction StateActionFunc
 	exitAction  StateActionFunc
 }
 
+// NewMachine creates a new machine with an initial state and no transitions.
 func NewMachine(initial State) *Machine {
 	return &Machine{
-		transitions: map[TransitionEvent]State{},
+		transitions: map[transitionEvent]State{},
 		current:     initial,
 	}
 }
 
+// SetTransition defines an allowed transition from a current state to a next
+// state on a specific event.
 func (machine *Machine) SetTransition(current State, input Event, next State) {
-	machine.transitions[TransitionEvent{Current: current, Input: input}] = next
+	machine.transitions[transitionEvent{Current: current, Input: input}] = next
 }
 
+// SetEnterAction defines a callback function for entering a state.
 func (machine *Machine) SetEnterAction(f StateActionFunc) {
 	machine.enterAction = f
 }
 
+// SetExitAction defines a callback function for leaving a state.
 func (machine *Machine) SetExitAction(f StateActionFunc) {
 	machine.exitAction = f
 }
 
+// Transition performs a transition for a given event. If the transition is not
+// possible, an error is returned.
+// When leaving the old state, the exit action is called (if provided). When
+// entering the new state, the enter action is called (if provided).
 func (machine *Machine) Transition(input Event) error {
-	next, ok := machine.transitions[TransitionEvent{Current: machine.current, Input: input}]
+	next, ok := machine.transitions[transitionEvent{Current: machine.current, Input: input}]
 	if !ok {
 		return fmt.Errorf("there is no state to transition to from state '%s' on event '%s'", machine.current, input)
 	}
@@ -69,6 +81,6 @@ func (machine *Machine) Transition(input Event) error {
 // when calling Transition afterwards, an error is returned because meanwhile
 // another process already made that transition.
 func (machine *Machine) CanTransition(input Event) bool {
-	_, ok := machine.transitions[TransitionEvent{Current: machine.current, Input: input}]
+	_, ok := machine.transitions[transitionEvent{Current: machine.current, Input: input}]
 	return ok
 }
