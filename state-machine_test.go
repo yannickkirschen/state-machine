@@ -34,3 +34,15 @@ func TestTransition(t *testing.T) {
 		t.Error("expecting door to be opened")
 	}
 }
+
+func TestCanTransition(t *testing.T) {
+	machine := getMachine()
+
+	if !machine.CanTransition("open-door") {
+		t.Error("expecting machine.CanTransition(\"open-door\") to return true")
+	}
+
+	if machine.CanTransition("close-door") {
+		t.Error("expecting machine.CanTransition(\"close-door\") to return false")
+	}
+}

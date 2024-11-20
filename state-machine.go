@@ -61,3 +61,14 @@ func (machine *Machine) Transition(input Event) error {
 	machine.current = next
 	return nil
 }
+
+// CanTransition checks if the machine can transition to a new state when the
+// given event occurs.
+// Important note: Machine methods are not thread-safe! When multiple processes
+// change states on a machine, it may happen that CanTransition returns true but
+// when calling Transition afterwards, an error is returned because meanwhile
+// another process already made that transition.
+func (machine *Machine) CanTransition(input Event) bool {
+	_, ok := machine.transitions[TransitionEvent{Current: machine.current, Input: input}]
+	return ok
+}
