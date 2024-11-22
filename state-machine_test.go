@@ -23,6 +23,20 @@ func getMachine() *Machine {
 	return machine
 }
 
+func TestState(t *testing.T) {
+	machine := getMachine()
+
+	if machine.State() != "close" {
+		t.Error("expecting state to be close")
+	}
+
+	machine.Transition("open-door")
+
+	if machine.State() != "open" {
+		t.Error("expecting state to be open")
+	}
+}
+
 func TestTransition(t *testing.T) {
 	machine := getMachine()
 

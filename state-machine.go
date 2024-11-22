@@ -31,6 +31,11 @@ func NewMachine(initial State) *Machine {
 	}
 }
 
+// State returns the current state.
+func (machine *Machine) State() State {
+	return machine.current
+}
+
 // SetTransition defines an allowed transition from a current state to a next
 // state on a specific event.
 func (machine *Machine) SetTransition(current State, input Event, next State) {
