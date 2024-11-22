@@ -58,11 +58,11 @@ func TestState(t *testing.T) {
 func TestTransition(t *testing.T) {
 	machine := getMachine()
 
-	if err := machine.Transition(OpenDoor); err != nil {
+	if _, _, err := machine.Transition(OpenDoor); err != nil {
 		t.Error(err)
 	}
 
-	if err := machine.Transition(OpenDoor); err == nil {
+	if _, _, err := machine.Transition(OpenDoor); err == nil {
 		t.Error("expecting door to be opened")
 	}
 }
@@ -82,16 +82,30 @@ func TestCanTransition(t *testing.T) {
 func TestComplexTransition(t *testing.T) {
 	machine := getComplexMachine()
 
-	if err := machine.Transition(OpenDoor); err != nil {
+	var last *ComplexDoorState
+	var current *ComplexDoorState
+	if l, c, err := machine.Transition(OpenDoor); err != nil {
 		t.Error(err)
+	} else {
+		last = *l
+		current = *c
 	}
 
-	if err := machine.Transition(OpenDoor); err == nil {
+	if _, _, err := machine.Transition(OpenDoor); err == nil {
 		t.Error("expecting door to be opened")
 	}
 
 	state := machine.State()
 	if state.OpenedBy != "Peter" {
 		t.Errorf("expecting state %s to be 'Peter', not %s", state.Id, state.OpenedBy)
+	}
+
+	if state.Id != current.Id {
+		t.Errorf("States are not equal (%s vs %s)", state.Id, current.Id)
+	}
+
+	last.Id = "this should have no effect"
+	if state.Id == last.Id {
+		t.Errorf("State and last state are equal")
 	}
 }

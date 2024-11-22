@@ -22,14 +22,14 @@ func main() {
 		return nil
 	})
 
-	machine.SetExitAction(func(old, next *DoorState) error {
-		fmt.Printf("Leaving '%s' going to '%s'\n", old.Id, next.Id)
+	machine.SetExitAction(func(current, next *DoorState) error {
+		fmt.Printf("Leaving '%s' going to '%s'\n", current.Id, next.Id)
 		return nil
 	})
 
 	fmt.Printf("Current state is %+v\n", machine.State())
 
-	if err := machine.Transition("open-door"); err != nil {
+	if _, _, err := machine.Transition("open-door"); err != nil {
 		panic(err)
 	}
 

@@ -73,29 +73,30 @@ func (machine *Machine[T]) SetExitAction(f StateActionFunc[T]) {
 // possible, an error is returned.
 // When leaving the old state, the exit action is called (if provided). When
 // entering the new state, the enter action is called (if provided).
-func (machine *Machine[T]) Transition(input Event) error {
+func (machine *Machine[T]) Transition(input Event) (*T, *T, error) {
 	transition := machine.findTransition(machine.current, input)
 	if transition == nil {
-		return fmt.Errorf("there is no state to transition to from state '%+v' on event '%s'", machine.current, input)
+		return nil, nil, fmt.Errorf("there is no state to transition to from state '%+v' on event '%s'", machine.current, input)
 	}
 
 	next := transition.Next
 
 	if machine.exitAction != nil {
 		if err := machine.exitAction(machine.current, next); err != nil {
-			return err
+			return nil, nil, err
 		}
 	}
 
 	if machine.enterAction != nil {
 		if err := machine.enterAction(machine.current, next); err != nil {
-			return err
+			return nil, nil, err
 		}
 	}
 
 	// We will only enter the next state if the enter action was successful.
+	last := copy(machine.current)
 	machine.current = next
-	return nil
+	return &last, &machine.current, nil
 }
 
 // CanTransition checks if the machine can transition to a new state when the
@@ -116,4 +117,8 @@ func (machine *Machine[T]) findTransition(current T, input Event) *Transition[T]
 	}
 
 	return nil
+}
+
+func copy[T any](t T) T {
+	return t
 }

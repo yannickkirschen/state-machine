@@ -21,7 +21,7 @@ Basic usage works as follows:
 Here is an example code based on the very simple use-case of a door:
 
 ```go
-// Signature: <initial state>
+// Signature: <machine> = <initial state>
 machine := fsm.NewMachine("close")
 
 // Signature: <current state, input event, next state>
@@ -40,8 +40,8 @@ machine.SetExitAction(func(current, next string) error {
 
 fmt.Printf("Current state is %s\n", machine.State())
 
-// Signature: <input event>
-if err := machine.Transition("open-door"); err != nil {
+// Signature: <last, current, err> = <input event>
+if _, _, err := machine.Transition("open-door"); err != nil {
     panic(err)
 }
 

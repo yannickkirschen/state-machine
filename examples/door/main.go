@@ -23,7 +23,7 @@ func main() {
 
 	fmt.Printf("Current state is %s\n", machine.State())
 
-	if err := machine.Transition("open-door"); err != nil {
+	if _, _, err := machine.Transition("open-door"); err != nil {
 		panic(err)
 	}
 
