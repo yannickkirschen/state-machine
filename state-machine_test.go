@@ -1,7 +1,6 @@
 package fsm
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -13,18 +12,29 @@ const (
 	CloseDoor = "close-door"
 )
 
-func getMachine() *Machine {
+type ComplexDoorState struct {
+	Id       string
+	OpenedBy string
+}
+
+func getMachine() *Machine[string] {
 	machine := NewMachine(Close)
 	machine.SetTransition(Open, CloseDoor, Close)
 	machine.SetTransition(Close, OpenDoor, Open)
+	return machine
+}
 
-	machine.SetEnterAction(func(last, new State) error {
-		fmt.Printf("Enter '%s' coming from '%s'\n", new, last)
+func getComplexMachine() *Machine[*ComplexDoorState] {
+	machine := NewMachine(&ComplexDoorState{Id: "close"})
+	machine.SetTransition(&ComplexDoorState{Id: "open"}, "close-door", &ComplexDoorState{Id: "close"})
+	machine.SetTransition(&ComplexDoorState{Id: "close"}, "open-door", &ComplexDoorState{Id: "open"})
+
+	machine.SetEnterAction(func(last, new *ComplexDoorState) error {
+		new.OpenedBy = "Peter"
 		return nil
 	})
 
-	machine.SetExitAction(func(current, next State) error {
-		fmt.Printf("Leaving '%s' going to '%s'\n", current, next)
+	machine.SetExitAction(func(old, next *ComplexDoorState) error {
 		return nil
 	})
 
@@ -66,5 +76,22 @@ func TestCanTransition(t *testing.T) {
 
 	if machine.CanTransition(CloseDoor) {
 		t.Error("expecting machine.CanTransition(\"close-door\") to return false")
+	}
+}
+
+func TestComplexTransition(t *testing.T) {
+	machine := getComplexMachine()
+
+	if err := machine.Transition(OpenDoor); err != nil {
+		t.Error(err)
+	}
+
+	if err := machine.Transition(OpenDoor); err == nil {
+		t.Error("expecting door to be opened")
+	}
+
+	state := machine.State()
+	if state.OpenedBy != "Peter" {
+		t.Errorf("expecting state %s to be 'Peter', not %s", state.Id, state.OpenedBy)
 	}
 }
