@@ -22,7 +22,7 @@ Here is an example code based on the very simple use-case of a door:
 
 ```go
 // Signature: <machine> = <initial state>
-machine := fsm.NewMachine("close")
+machine := fsm.NewMachine[string]("close")
 
 // Signature: <current state, input event, next state>
 machine.SetTransition("open", "close-door", "close")
@@ -61,7 +61,7 @@ type DoorState struct {
 ```
 
 ```go
-machine := fsm.NewMachine(&DoorState{Id: "close"})
+machine := fsm.NewMachine[string](&DoorState{Id: "close"})
 machine.SetTransition(&DoorState{Id: "open"}, "close-door", &DoorState{Id: "close"})
 machine.SetTransition(&DoorState{Id: "close"}, "open-door", &DoorState{Id: "open"})
 

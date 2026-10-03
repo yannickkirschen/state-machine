@@ -17,20 +17,20 @@ type ComplexDoorState struct {
 	OpenedBy string
 }
 
-func getMachine() *Machine[string] {
-	machine := NewMachine(Close)
+func getMachine() *Machine[string, string] {
+	machine := NewMachine[string](Close)
 	machine.SetTransition(Open, CloseDoor, Close)
 	machine.SetTransition(Close, OpenDoor, Open)
 	return machine
 }
 
-func getComplexMachine() *Machine[*ComplexDoorState] {
-	machine := NewMachine(&ComplexDoorState{Id: "close"})
+func getComplexMachine() *Machine[string, *ComplexDoorState] {
+	machine := NewMachine[string](&ComplexDoorState{Id: "close"})
 	machine.SetTransition(&ComplexDoorState{Id: "open"}, "close-door", &ComplexDoorState{Id: "close"})
 	machine.SetTransition(&ComplexDoorState{Id: "close"}, "open-door", &ComplexDoorState{Id: "open"})
 
-	machine.SetEnterAction(func(last, new *ComplexDoorState) error {
-		new.OpenedBy = "Peter"
+	machine.SetEnterAction(func(lastState, newState *ComplexDoorState) error {
+		newState.OpenedBy = "Peter"
 		return nil
 	})
 

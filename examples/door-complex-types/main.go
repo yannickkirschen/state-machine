@@ -12,13 +12,13 @@ type DoorState struct {
 }
 
 func main() {
-	machine := fsm.NewMachine(&DoorState{Id: "close"})
+	machine := fsm.NewMachine[string](&DoorState{Id: "close"})
 	machine.SetTransition(&DoorState{Id: "open"}, "close-door", &DoorState{Id: "close"})
 	machine.SetTransition(&DoorState{Id: "close"}, "open-door", &DoorState{Id: "open"})
 
-	machine.SetEnterAction(func(last, new *DoorState) error {
-		fmt.Printf("Enter '%s' coming from '%s'\n", new.Id, last.Id)
-		new.OpenedBy = "Peter"
+	machine.SetEnterAction(func(lastState, newState *DoorState) error {
+		fmt.Printf("Enter '%s' coming from '%s'\n", newState.Id, lastState.Id)
+		newState.OpenedBy = "Peter"
 		return nil
 	})
 

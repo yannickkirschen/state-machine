@@ -5,13 +5,11 @@ import (
 	"reflect"
 )
 
-type Event string
-
 // Transition is a three-tuple of a transition in a finite-state machine
 // containing a current state, an event and a next state that they lead to.
-type Transition[T comparable] struct {
+type Transition[E, T comparable] struct {
 	Current T
-	Input   Event
+	Input   E
 	Next    T
 }
 
@@ -20,8 +18,8 @@ type Transition[T comparable] struct {
 type StateActionFunc[T comparable] func(T, T) error
 
 // Machine is a finite-state machine handling states of a given comparable type.
-type Machine[T comparable] struct {
-	transitions []*Transition[T]
+type Machine[E, T comparable] struct {
+	transitions []*Transition[E, T]
 	current     T
 
 	enterAction StateActionFunc[T]
@@ -29,24 +27,24 @@ type Machine[T comparable] struct {
 }
 
 // NewMachine creates a new machine with an initial state and no transitions.
-func NewMachine[T comparable](initial T) *Machine[T] {
-	return &Machine[T]{
-		transitions: []*Transition[T]{},
+func NewMachine[E, T comparable](initial T) *Machine[E, T] {
+	return &Machine[E, T]{
+		transitions: []*Transition[E, T]{},
 		current:     initial,
 	}
 }
 
 // State returns the current state.
-func (machine *Machine[T]) State() T {
+func (machine *Machine[E, T]) State() T {
 	return machine.current
 }
 
 // SetTransition defines an allowed transition from a current state to a next
 // state on a specific event.
-func (machine *Machine[T]) SetTransition(current T, input Event, next T) {
+func (machine *Machine[E, T]) SetTransition(current T, input E, next T) {
 	transition := machine.findTransition(current, input)
 	if transition == nil {
-		machine.transitions = append(machine.transitions, &Transition[T]{
+		machine.transitions = append(machine.transitions, &Transition[E, T]{
 			Current: current,
 			Input:   input,
 			Next:    next,
@@ -60,12 +58,12 @@ func (machine *Machine[T]) SetTransition(current T, input Event, next T) {
 }
 
 // SetEnterAction defines a callback function for entering a state.
-func (machine *Machine[T]) SetEnterAction(f StateActionFunc[T]) {
+func (machine *Machine[E, T]) SetEnterAction(f StateActionFunc[T]) {
 	machine.enterAction = f
 }
 
 // SetExitAction defines a callback function for leaving a state.
-func (machine *Machine[T]) SetExitAction(f StateActionFunc[T]) {
+func (machine *Machine[E, T]) SetExitAction(f StateActionFunc[T]) {
 	machine.exitAction = f
 }
 
@@ -73,10 +71,10 @@ func (machine *Machine[T]) SetExitAction(f StateActionFunc[T]) {
 // possible, an error is returned.
 // When leaving the old state, the exit action is called (if provided). When
 // entering the new state, the enter action is called (if provided).
-func (machine *Machine[T]) Transition(input Event) (*T, *T, error) {
+func (machine *Machine[E, T]) Transition(input E) (*T, *T, error) {
 	transition := machine.findTransition(machine.current, input)
 	if transition == nil {
-		return nil, nil, fmt.Errorf("there is no state to transition to from state '%+v' on event '%s'", machine.current, input)
+		return nil, nil, fmt.Errorf("there is no state to transition to from state '%+v' on event '%+v'", machine.current, input)
 	}
 
 	next := transition.Next
@@ -94,7 +92,7 @@ func (machine *Machine[T]) Transition(input Event) (*T, *T, error) {
 	}
 
 	// We will only enter the next state if the enter action was successful.
-	last := copy(machine.current)
+	last := copyAny(machine.current)
 	machine.current = next
 	return &last, &machine.current, nil
 }
@@ -105,11 +103,11 @@ func (machine *Machine[T]) Transition(input Event) (*T, *T, error) {
 // change states on a machine, it may happen that CanTransition returns true but
 // when calling Transition afterwards, an error is returned because meanwhile
 // another process already made that transition.
-func (machine *Machine[T]) CanTransition(input Event) bool {
+func (machine *Machine[E, T]) CanTransition(input E) bool {
 	return machine.findTransition(machine.current, input) != nil
 }
 
-func (machine *Machine[T]) findTransition(current T, input Event) *Transition[T] {
+func (machine *Machine[E, T]) findTransition(current T, input E) *Transition[E, T] {
 	for _, transition := range machine.transitions {
 		if reflect.DeepEqual(transition.Current, current) && transition.Input == input {
 			return transition
@@ -119,6 +117,6 @@ func (machine *Machine[T]) findTransition(current T, input Event) *Transition[T]
 	return nil
 }
 
-func copy[T any](t T) T {
+func copyAny[T any](t T) T {
 	return t
 }

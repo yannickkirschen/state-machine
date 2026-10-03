@@ -7,12 +7,12 @@ import (
 )
 
 func main() {
-	machine := fsm.NewMachine("close")
+	machine := fsm.NewMachine[string]("close")
 	machine.SetTransition("open", "close-door", "close")
 	machine.SetTransition("close", "open-door", "open")
 
-	machine.SetEnterAction(func(last, new string) error {
-		fmt.Printf("Enter '%s' coming from '%s'\n", new, last)
+	machine.SetEnterAction(func(lastState, newState string) error {
+		fmt.Printf("Enter '%s' coming from '%s'\n", newState, lastState)
 		return nil
 	})
 
