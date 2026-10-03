@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	fsm "github.com/yannickkirschen/state-machine"
+	fsm "github.com/yannickkirschen/state-machine/v2"
 )
 
 func main() {
